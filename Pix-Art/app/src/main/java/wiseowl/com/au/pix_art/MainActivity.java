@@ -1,14 +1,11 @@
 package wiseowl.com.au.pix_art;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -48,20 +45,21 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
 
 
     @Override
-    public void constructBitmapListener(Bitmap[] array, int width) {
-        Log.i("ash", "in listner");
-        Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bmp);
-        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+    public void constructBitmapListener(Bitmap bitmap) {
+//        Log.i("ash", "in listner");
+//        Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+//        Canvas canvas = new Canvas(bmp);
+//        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+//
+//        for (int i = 0; i < array.length; i++) {
+//            int y = i / width;
+//            int x = i - (y * width);
+//            canvas.drawBitmap(array[i], x * TILE_SIZE, y * TILE_SIZE, paint);
+//        }
 
-        for (int i = 0; i < array.length; i++) {
-            int y = i / width;
-            int x = i - (y * width);
-            canvas.drawBitmap(array[i], x * TILE_SIZE, y * TILE_SIZE, paint);
-        }
-
-        iv.setImageBitmap(bmp);
-        Log.i("ash", "done");
+        iv.setImageBitmap(bitmap);
+//        bitmap.recycle();
+//        Log.i("ash", "done");
     }
 
 

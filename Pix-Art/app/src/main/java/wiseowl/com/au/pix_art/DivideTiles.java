@@ -2,6 +2,8 @@ package wiseowl.com.au.pix_art;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -9,7 +11,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by anish.patel on 20/10/2016.
@@ -18,13 +19,20 @@ import java.util.concurrent.ExecutionException;
 public class DivideTiles {
 
     ConstructBitmapListener listener;
+    Bitmap bmp;
+    Canvas canvas;
+    Paint paint;
+
+    int imgwidth = 0;
+    int imgHeight = 0;
+    int width = 0;
+    int tileSize = 0;
+
     public DivideTiles(Bitmap map, int size) {
 
 
         DivideAsync tiles = new DivideAsync();
-        tiles.execute(new DivideParams(map,size));
-
-//        divideInTiles(image, size, titleSize);
+        tiles.execute(new DivideParams(map, size));
     }
 
 
@@ -90,8 +98,8 @@ public class DivideTiles {
 //        return null;
 //    }
 
-    public  class DivideAsync extends AsyncTask<DivideParams, Void, String[]> {
-        int width = 0;
+    public class DivideAsync extends AsyncTask<DivideParams, Void, String[]> {
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -101,13 +109,19 @@ public class DivideTiles {
         @Override
         protected String[] doInBackground(DivideParams... params) {
             Bitmap img = params[0].map;
-            int tileSize = params[0].size;
+            tileSize = params[0].size;
+            imgwidth = img.getWidth();
+            imgHeight = img.getHeight();
+
+            bmp = Bitmap.createBitmap(imgwidth, imgHeight, Bitmap.Config.ARGB_8888);
+            canvas = new Canvas(bmp);
+            paint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             img.compress(Bitmap.CompressFormat.JPEG, 70, stream);
 
-             width = img.getWidth() / tileSize;
-            int height = img.getHeight() / tileSize;
+            width = imgwidth / tileSize;
+            int height = imgHeight / tileSize;
 
             String[] array = new String[width * height]; //The array of tiles
         /* An image can be represented by an array of int like this :
@@ -134,7 +148,7 @@ public class DivideTiles {
 
                             String color = String.format("%06X", 0xFFFFFF & newBitmap.getPixel(0, 0));// This gives you the average color and converts to HEX
 
-                                                                  // Free memory
+                            // Free memory
 
                             int currentIndex = (line * width) + column;
                             if (currentIndex < width * height)
@@ -151,70 +165,103 @@ public class DivideTiles {
                 }
                 return array;
             } catch (Exception e) {
-            e.printStackTrace();
-        }
+                e.printStackTrace();
+            }
 
             return null;
         }
 
 
-
         @Override
         protected void onPostExecute(String[] ints) {
             super.onPostExecute(ints);
-            Bitmap[] array = new Bitmap[ints.length];
+//            Bitmap[] array = new Bitmap[ints.length];
             String url = "http://10.0.2.2:8765/color/32/32/";
-            for(int i = 0; i < ints.length; i ++){
-              LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
-                try {
-                    array[i] = getTileFromServer.execute(url+ints[i]).get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
+
+            for (int i = 0; i < ints.length; i++) {
+                LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
+
+                ConstructParams test = new ConstructParams( (url + ints[i]), i);
+//                try {
+                    getTileFromServer.execute(test);
+//                    getTileFromServer.execute(url + ints[i]);
+
+
+//                    if (getTileFromServer.execute(test).get() <= ints.length && listener != null){
+//                        listener.constructBitmapListener(bmp);
+//                    }
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                } catch (ExecutionException e) {
+//                    e.printStackTrace();
+//                }
+
+
+//                new ConstructParams(canvas,paint,url,width);
+
+
+
+
+//                    array[i] = getTileFromServer.execute(url + ints[i]).get();
             }
-           if(listener != null) {
-               listener.constructBitmapListener(array, width);
-           }
+//            if (listener != null) {
+//                listener.constructBitmapListener(bmp);
+//
+//
+//
+//            }
+
         }
     }
 
     public interface ConstructBitmapListener {
-        void constructBitmapListener(Bitmap[] array, int width);
+        void constructBitmapListener(Bitmap img);
     }
 
-    public void ConstructBitmapListener(ConstructBitmapListener listener){
+    public void ConstructBitmapListener(ConstructBitmapListener listener) {
         this.listener = listener;
 
     }
 
 
-    public static class LoadImageTileFromServer extends AsyncTask<String, Void, Bitmap> {
+
+    public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
 
         //        private final WeakReference<ImageView> imageViewReference;
 //ImageView imageView
         public LoadImageTileFromServer() {
 //            imageViewReference = new WeakReference<ImageView>(imageView);
         }
+        int pos = 0;
 
         @Override
-        protected Bitmap doInBackground(String... params) {
+        protected Integer doInBackground(ConstructParams... params) {
             try {
-                return downloadBitmap(params[0]);
+                pos = params[0].pos;
+
+                int y = pos / width;
+                int x = pos - (y * width);
+                canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
+                return 1 ;
             } catch (Exception e) {
                 // log error
             }
             return null;
         }
 
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            if (isCancelled()) {
-                bitmap = null;
-            }
-
+//        @Override
+//        protected Bitmap doInBackground(String... params) {
 //
+//            return null;
+//        }
+
+        @Override
+        protected void onPostExecute(Integer done) {
+
+            if (done == 1 && listener != null) {
+                listener.constructBitmapListener(bmp);
+
+            }
         }
 
         private Bitmap downloadBitmap(String myUrl) {
