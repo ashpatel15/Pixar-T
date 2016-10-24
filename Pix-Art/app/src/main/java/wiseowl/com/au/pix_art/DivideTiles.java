@@ -26,6 +26,7 @@ public class DivideTiles {
     int imgwidth = 0;
     int imgHeight = 0;
     int width = 0;
+    int arraySize = 0;
     int tileSize = 0;
 
     public DivideTiles(Bitmap map, int size) {
@@ -177,13 +178,18 @@ public class DivideTiles {
             super.onPostExecute(ints);
 //            Bitmap[] array = new Bitmap[ints.length];
             String url = "http://10.0.2.2:8765/color/32/32/";
-
-            for (int i = 0; i < ints.length; i++) {
+            arraySize = ints.length;
+            int i = 0;
+//            for (int i = 0; i < ints.length; i++) {
+            for (String urlInis : ints) {
                 LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
 
-                ConstructParams test = new ConstructParams( (url + ints[i]), i);
+                ConstructParams test = new ConstructParams((url + urlInis), i);
 //                try {
-                    getTileFromServer.execute(test);
+                getTileFromServer.execute(test);
+                i++;
+//            }
+
 //                    getTileFromServer.execute(url + ints[i]);
 
 
@@ -200,10 +206,8 @@ public class DivideTiles {
 //                new ConstructParams(canvas,paint,url,width);
 
 
-
-
 //                    array[i] = getTileFromServer.execute(url + ints[i]).get();
-            }
+        }
 //            if (listener != null) {
 //                listener.constructBitmapListener(bmp);
 //
@@ -211,12 +215,12 @@ public class DivideTiles {
 //
 //            }
 
-        }
     }
+}
 
-    public interface ConstructBitmapListener {
-        void constructBitmapListener(Bitmap img);
-    }
+public interface ConstructBitmapListener {
+    void constructBitmapListener(Bitmap img);
+}
 
     public void ConstructBitmapListener(ConstructBitmapListener listener) {
         this.listener = listener;
@@ -224,30 +228,31 @@ public class DivideTiles {
     }
 
 
+public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
 
-    public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
+//        private final WeakReference<ImageView> imageViewReference;
+//        ImageView imageView;
 
-        //        private final WeakReference<ImageView> imageViewReference;
-//ImageView imageView
-        public LoadImageTileFromServer() {
+    public LoadImageTileFromServer() {
 //            imageViewReference = new WeakReference<ImageView>(imageView);
-        }
-        int pos = 0;
+    }
 
-        @Override
-        protected Integer doInBackground(ConstructParams... params) {
-            try {
-                pos = params[0].pos;
+    int pos = 0;
 
-                int y = pos / width;
-                int x = pos - (y * width);
-                canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
-                return 1 ;
-            } catch (Exception e) {
-                // log error
-            }
-            return null;
+    @Override
+    protected Integer doInBackground(ConstructParams... params) {
+        try {
+            pos = params[0].pos;
+
+            int y = pos / width;
+            int x = pos - (y * width);
+            canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
+            return pos;
+        } catch (Exception e) {
+            // log error
         }
+        return null;
+    }
 
 //        @Override
 //        protected Bitmap doInBackground(String... params) {
@@ -255,42 +260,54 @@ public class DivideTiles {
 //            return null;
 //        }
 
-        @Override
-        protected void onPostExecute(Integer done) {
+    @Override
+    protected void onPostExecute(Integer done) {
 
-            if (done == 1 && listener != null) {
-                listener.constructBitmapListener(bmp);
+        if (done == (arraySize - 1) && listener != null) {
+            listener.constructBitmapListener(bmp);
 
-            }
         }
 
-        private Bitmap downloadBitmap(String myUrl) {
-            HttpURLConnection conn = null;
-            InputStream is = null;
-            try {
-                URL url = new URL(myUrl);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                // Starts the query
-                conn.connect();
-                is = conn.getInputStream();
-                if (is != null) {
-                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-                    return bitmap;
-                }
-            } catch (Exception e) {
-                conn.disconnect();
-                Log.w("ImageDownloader", "Error downloading image from " + myUrl);
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
-            }
-            return null;
-        }
+//            if (imageViewReference != null) {
+//                ImageView imageView = imageViewReference.get();
+//                if (imageView != null) {
+//                    if (bmp != null) {
+//                        imageView.setImageBitmap(bmp);
+//                    } else {
+////                        Drawable placeholder = imageView.getContext().getResources().getDrawable(R.drawable.placeholder);
+////                        imageView.setImageDrawable(placeholder);
+//                    }
+//                }
+//            }
     }
+
+    private Bitmap downloadBitmap(String myUrl) {
+        HttpURLConnection conn = null;
+        InputStream is = null;
+        try {
+            URL url = new URL(myUrl);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(200);
+            conn.setConnectTimeout(1000);
+            conn.setRequestMethod("GET");
+            conn.setDoInput(true);
+            // Starts the query
+            conn.connect();
+            is = conn.getInputStream();
+            if (is != null) {
+                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                return bitmap;
+            }
+        } catch (Exception e) {
+            conn.disconnect();
+            Log.w("ImageDownloader", "Error downloading image from " + myUrl);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+        return null;
+    }
+}
 
 }
