@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 /**
  * Created by anish.patel on 20/10/2016.
@@ -97,7 +98,7 @@ public class DivideTiles {
 //        return null;
 //    }
 
-    public class DivideAsync extends AsyncTask<DivideParams, Void, String[]> {
+    public class DivideAsync extends AsyncTask<DivideParams, Void, ArrayList<String>> {
 
         @Override
         protected void onPreExecute() {
@@ -106,59 +107,41 @@ public class DivideTiles {
         }
 
         @Override
-        protected String[] doInBackground(DivideParams... params) {
+        protected ArrayList<String> doInBackground(DivideParams... params) {
             Bitmap img = params[0].map;
             tileSize = params[0].size;
+            imgwidth = img.getWidth();
+            imgHeight = img.getHeight();
 
-
-            bmp = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
+            bmp = Bitmap.createBitmap(imgwidth, imgHeight, Bitmap.Config.ARGB_8888);
             canvas = new Canvas(bmp);
             paint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             img.compress(Bitmap.CompressFormat.JPEG, 30, stream);
 
-            imgwidth = img.getWidth();
-            imgHeight = img.getHeight();
+
 
             width = imgwidth / tileSize;
-            int height = imgHeight / tileSize;
-            Log.i("anish", "width = " + width);
-            Log.i("anish", "height = " + height);
-            String[] array = new String[width * height]; //The array of tiles
+            ArrayList<String> array = new ArrayList<>();
 
             try {
 
-                int line = 0;
-                int column = 0;
-
                 for (int y = 0; y < img.getHeight(); y += tileSize) {
                     for (int x = 0; x < img.getWidth(); x += tileSize) {
-                        if (x + tileSize < img.getWidth() && y + tileSize < img.getHeight()) {
+                        if (x + tileSize <= img.getWidth() && y + tileSize <= img.getHeight()) {
 
                             Bitmap tile = Bitmap.createBitmap(img, x, y, tileSize, tileSize); // This gives a tile of the original image
                             Bitmap newBitmap = Bitmap.createScaledBitmap(tile, 1, 1, true);
                             tile.recycle();
 
                             String color = String.format("%06X", 0xFFFFFF & newBitmap.getPixel(0, 0));// This gives you the average color and converts to HEX
-
+                            array.add(color);
                             // Free memory
-
-                            int currentIndex = (line * width) + column;
-                            Log.i("anish", "column = " + column + "   line = " + line + "    width = " + width +"     height = "+height+ "      line * width + column= " + ((line * width) + column));
-                            if (currentIndex < width * height) {
-                                array[currentIndex] = color;// Add color to current index in array
-                            }
-                            Log.i("anish",  "  width * height = " +(width * height) );
-                            Log.i("anish", currentIndex + "  color = " + color);
-                            Log.i("anish",  "------------------------------------------------------------" );
                             newBitmap.recycle();
 
-                            column++;
                         }
                     }
-                    line++;
-                    column = 0;
                 }
                 return array;
             } catch (Exception e) {
@@ -170,23 +153,20 @@ public class DivideTiles {
 
 
         @Override
-        protected void onPostExecute(String[] ints) {
+        protected void onPostExecute(ArrayList<String> ints) {
             super.onPostExecute(ints);
-//            Bitmap[] array = new Bitmap[ints.length];
-            String url = "http://10.0.2.2:8765/color/32/32/";
-            arraySize = ints.length;
+            String url = "http://10.0.2.2:8765/color/"+tileSize+"/"+tileSize+"/";
+            arraySize = ints.size();
+
             int i = 0;
 
             for (String urlInis : ints) {
-//                Log.i("anish", i+"   url = " + urlInis);
                 if (urlInis != null) {
                     LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
                     ConstructParams test = new ConstructParams((url + urlInis), i);
 
                     getTileFromServer.execute(test);
                     i++;
-                } else {
-                    arraySize--;
                 }
 
             }
@@ -205,9 +185,7 @@ public class DivideTiles {
 
     public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
 
-        public LoadImageTileFromServer() {
-
-        }
+        public LoadImageTileFromServer() {}
 
         int pos = 0;
 
@@ -230,24 +208,15 @@ public class DivideTiles {
 
         @Override
         protected void onPostExecute(Integer done) {
-//            Log.i("anish", "done = " + done + "     arraySize = " + arraySize);
             if (done == (arraySize - 1) && listener != null) {
-
                 listener.constructBitmapListener(bmp);
-
-//                ((MainActivity)activity)
-
             }
-
-//            int p = (int) ((Float.valueOf(done) / Float.valueOf(arraySize)) * 100);
-//            Log.i("anish", "progress = " + p);
-//            ((MainActivity) activity).updateProgress(p);
-
         }
 
         private Bitmap downloadBitmap(String myUrl) {
             HttpURLConnection conn = null;
             InputStream is = null;
+
             try {
                 URL url = new URL(myUrl);
                 conn = (HttpURLConnection) url.openConnection();
@@ -258,6 +227,7 @@ public class DivideTiles {
                 // Starts the query
                 conn.connect();
                 is = conn.getInputStream();
+
                 if (is != null) {
                     Bitmap bitmap = BitmapFactory.decodeStream(is);
                     return bitmap;

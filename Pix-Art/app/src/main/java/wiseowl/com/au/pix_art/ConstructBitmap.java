@@ -1,24 +1,45 @@
-//package wiseowl.com.au.pix_art;
-//
-//import android.graphics.Bitmap;
-//import android.graphics.BitmapFactory;
-//import android.os.AsyncTask;
-//import android.util.Log;
-//
-//import java.io.InputStream;
-//import java.net.HttpURLConnection;
-//import java.net.URL;
-//
+//package wiseowl.com.au.pix_art;import static android.R.attr.y;
+
 ///**
 // * Created by anish.patel on 24/10/2016.
 // */
 //
-//public class ConstructBitmap extends AsyncTask<ConstructParams, Void, Integer> {
+//public class ConstructBitmap {
 //
-////    public ConstructBitmap(ConstructParams params) {
-////        BuildImage async = new BuildImage();
-////        async.execute(params);
-////    }
+//    public ConstructBitmap(ConstructParams params) {
+//
+//    }
+//
+//    ArrayList<Bitmap> imageChunksStorageList ;
+//    private void splitImage(ImageView image, int rows, int columns)
+//    {
+////For height and width of the small image chunks
+//        int chunkHeight,chunkWidth;
+//        Bitmap image; // use to store image chunks
+//        int chunkNumbers=rows*column;
+////To store all the small image chunks in bitmap format in this list
+//        bitmapStorageList = new ArrayList<Bitmap>(chunkNumbers);
+////Getting the BitmapDrawable from the imageview where your image is displayed
+//        BitmapDrawable drawable = (BitmapDrawable) image.getDrawable();
+//        Bitmap bitmap = drawable.getBitmap();
+//        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
+////setting the height and width of each pieces according to the rows and columns
+//        chunkHeight = bitmap.getHeight()/rows;
+//        chunkWidth = bitmap.getWidth()/columns;
+////x and y are the pixel positions of the image chunks
+//        int yCoord = 0;
+//        for(int i=0; i<rows; i++)
+//        {
+//            int x = 0;
+//            for(int j=0; j<columns; j++)
+//            {
+//                image=Bitmap.createBitmap(scaledBitmap, xCoord, yCoord, chunkWidth, chunkHeight);
+//                imageChunksStorageList.add(image);
+//                x=x+chunkWidth;
+//            }
+//            y=y+chunkHeight;
+//        }
+/* Once, you are done with this split task then you can show your arraylist into the gridview */
 //
 ////    public ConstructBitmap(DivideTiles.ConstructParams test) {
 ////    }
@@ -103,3 +124,5 @@
 ////    }
 ////    }
 //}
+
+
