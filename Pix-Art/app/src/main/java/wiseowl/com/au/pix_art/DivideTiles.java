@@ -17,20 +17,18 @@ import java.net.URL;
  */
 
 public class DivideTiles {
-
     ConstructBitmapListener listener;
     Bitmap bmp;
     Canvas canvas;
     Paint paint;
 
-    int imgwidth = 0;
-    int imgHeight = 0;
-    int width = 0;
-    int arraySize = 0;
-    int tileSize = 0;
+    int imgwidth;
+    int imgHeight;
+    int width;
+    int arraySize;
+    int tileSize;
 
     public DivideTiles(Bitmap map, int size) {
-
 
         DivideAsync tiles = new DivideAsync();
         tiles.execute(new DivideParams(map, size));
@@ -111,29 +109,24 @@ public class DivideTiles {
         protected String[] doInBackground(DivideParams... params) {
             Bitmap img = params[0].map;
             tileSize = params[0].size;
-            imgwidth = img.getWidth();
-            imgHeight = img.getHeight();
 
-            bmp = Bitmap.createBitmap(imgwidth, imgHeight, Bitmap.Config.ARGB_8888);
+
+            bmp = Bitmap.createBitmap(img.getWidth(), img.getHeight(), Bitmap.Config.ARGB_8888);
             canvas = new Canvas(bmp);
             paint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            img.compress(Bitmap.CompressFormat.JPEG, 70, stream);
+            img.compress(Bitmap.CompressFormat.JPEG, 30, stream);
+
+            imgwidth = img.getWidth();
+            imgHeight = img.getHeight();
 
             width = imgwidth / tileSize;
             int height = imgHeight / tileSize;
-
+            Log.i("anish", "width = " + width);
+            Log.i("anish", "height = " + height);
             String[] array = new String[width * height]; //The array of tiles
-        /* An image can be represented by an array of int like this :
 
-            imagine your image is 2x2 pixel.
-            Each pixel has a color represented by an int
-
-            the array representation of that image would be : {top left pixel, topright pixel, bottom left pixel, bottomright pixel}
-
-            basically, each line of pixel in an array of int, and you add each line one by one at the end of the array.
-           */
             try {
 
                 int line = 0;
@@ -152,10 +145,13 @@ public class DivideTiles {
                             // Free memory
 
                             int currentIndex = (line * width) + column;
-                            if (currentIndex < width * height)
-
+                            Log.i("anish", "column = " + column + "   line = " + line + "    width = " + width +"     height = "+height+ "      line * width + column= " + ((line * width) + column));
+                            if (currentIndex < width * height) {
                                 array[currentIndex] = color;// Add color to current index in array
-
+                            }
+                            Log.i("anish",  "  width * height = " +(width * height) );
+                            Log.i("anish", currentIndex + "  color = " + color);
+                            Log.i("anish",  "------------------------------------------------------------" );
                             newBitmap.recycle();
 
                             column++;
@@ -180,47 +176,26 @@ public class DivideTiles {
             String url = "http://10.0.2.2:8765/color/32/32/";
             arraySize = ints.length;
             int i = 0;
-//            for (int i = 0; i < ints.length; i++) {
+
             for (String urlInis : ints) {
-                LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
+//                Log.i("anish", i+"   url = " + urlInis);
+                if (urlInis != null) {
+                    LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
+                    ConstructParams test = new ConstructParams((url + urlInis), i);
 
-                ConstructParams test = new ConstructParams((url + urlInis), i);
-//                try {
-                getTileFromServer.execute(test);
-                i++;
-//            }
+                    getTileFromServer.execute(test);
+                    i++;
+                } else {
+                    arraySize--;
+                }
 
-//                    getTileFromServer.execute(url + ints[i]);
-
-
-//                    if (getTileFromServer.execute(test).get() <= ints.length && listener != null){
-//                        listener.constructBitmapListener(bmp);
-//                    }
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                }
-
-
-//                new ConstructParams(canvas,paint,url,width);
-
-
-//                    array[i] = getTileFromServer.execute(url + ints[i]).get();
+            }
         }
-//            if (listener != null) {
-//                listener.constructBitmapListener(bmp);
-//
-//
-//
-//            }
-
     }
-}
 
-public interface ConstructBitmapListener {
-    void constructBitmapListener(Bitmap img);
-}
+    public interface ConstructBitmapListener {
+        void constructBitmapListener(Bitmap img);
+    }
 
     public void ConstructBitmapListener(ConstructBitmapListener listener) {
         this.listener = listener;
@@ -228,86 +203,75 @@ public interface ConstructBitmapListener {
     }
 
 
-public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
+    public class LoadImageTileFromServer extends AsyncTask<ConstructParams, Void, Integer> {
 
-//        private final WeakReference<ImageView> imageViewReference;
-//        ImageView imageView;
-
-    public LoadImageTileFromServer() {
-//            imageViewReference = new WeakReference<ImageView>(imageView);
-    }
-
-    int pos = 0;
-
-    @Override
-    protected Integer doInBackground(ConstructParams... params) {
-        try {
-            pos = params[0].pos;
-
-            int y = pos / width;
-            int x = pos - (y * width);
-            canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
-            return pos;
-        } catch (Exception e) {
-            // log error
-        }
-        return null;
-    }
-
-//        @Override
-//        protected Bitmap doInBackground(String... params) {
-//
-//            return null;
-//        }
-
-    @Override
-    protected void onPostExecute(Integer done) {
-
-        if (done == (arraySize - 1) && listener != null) {
-            listener.constructBitmapListener(bmp);
+        public LoadImageTileFromServer() {
 
         }
 
-//            if (imageViewReference != null) {
-//                ImageView imageView = imageViewReference.get();
-//                if (imageView != null) {
-//                    if (bmp != null) {
-//                        imageView.setImageBitmap(bmp);
-//                    } else {
-////                        Drawable placeholder = imageView.getContext().getResources().getDrawable(R.drawable.placeholder);
-////                        imageView.setImageDrawable(placeholder);
-//                    }
-//                }
-//            }
-    }
+        int pos = 0;
 
-    private Bitmap downloadBitmap(String myUrl) {
-        HttpURLConnection conn = null;
-        InputStream is = null;
-        try {
-            URL url = new URL(myUrl);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(200);
-            conn.setConnectTimeout(1000);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            // Starts the query
-            conn.connect();
-            is = conn.getInputStream();
-            if (is != null) {
-                Bitmap bitmap = BitmapFactory.decodeStream(is);
-                return bitmap;
+        @Override
+        protected Integer doInBackground(ConstructParams... params) {
+            try {
+                pos = params[0].pos;
+
+                int y = pos / width;
+                int x = pos - (y * width);
+
+                canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
+                return pos;
+            } catch (Exception e) {
+                // log error
+                e.getLocalizedMessage();
             }
-        } catch (Exception e) {
-            conn.disconnect();
-            Log.w("ImageDownloader", "Error downloading image from " + myUrl);
-        } finally {
-            if (conn != null) {
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer done) {
+//            Log.i("anish", "done = " + done + "     arraySize = " + arraySize);
+            if (done == (arraySize - 1) && listener != null) {
+
+                listener.constructBitmapListener(bmp);
+
+//                ((MainActivity)activity)
+
+            }
+
+//            int p = (int) ((Float.valueOf(done) / Float.valueOf(arraySize)) * 100);
+//            Log.i("anish", "progress = " + p);
+//            ((MainActivity) activity).updateProgress(p);
+
+        }
+
+        private Bitmap downloadBitmap(String myUrl) {
+            HttpURLConnection conn = null;
+            InputStream is = null;
+            try {
+                URL url = new URL(myUrl);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(500);
+                conn.setConnectTimeout(1000);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                // Starts the query
+                conn.connect();
+                is = conn.getInputStream();
+                if (is != null) {
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    return bitmap;
+                }
+            } catch (Exception e) {
                 conn.disconnect();
+                Log.w("ImageDownloader", "Error downloading image from " + myUrl);
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
+            return null;
         }
-        return null;
     }
-}
 
 }
