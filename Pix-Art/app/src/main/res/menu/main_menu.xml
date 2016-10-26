@@ -5,5 +5,12 @@
         android:id="@+id/pickImage"
         android:orderInCategory="100"
         android:title="@string/action_pick"
-        app:showAsAction="never" />
+        android:icon="@drawable/plus"
+        app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/settings"
+        android:orderInCategory="101"
+        android:title="@string/action_settings"
+        android:icon="@drawable/ic_settings_white"
+        app:showAsAction="ifRoom"/>
 </menu>

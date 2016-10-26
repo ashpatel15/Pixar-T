@@ -31,8 +31,8 @@ public class DivideTiles {
 
     public DivideTiles(Bitmap map, int size) {
 
-        DivideAsync tiles = new DivideAsync();
-        tiles.execute(new DivideParams(map, size));
+        DivideAsync tiles = new DivideAsync();                                                      //Start the tile devision in async task
+        tiles.execute(new DivideParams(map, size));                                                 //Pass params to Async 'new DivideParams(map, size)'
     }
 
 
@@ -47,56 +47,6 @@ public class DivideTiles {
         }
     }
 
-//    public Bitmap divideInTiles(Bitmap image, int titleSize) {
-//
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//        image.compress(Bitmap.CompressFormat.JPEG, 70, stream);
-//
-//        int width = image.getWidth() / titleSize;
-//        int height = image.getHeight() / titleSize;
-//
-//        int[] array = new int[width * height]; //The array of tiles
-//        /* An image can be represented by an array of int like this :
-//
-//            imagine your image is 2x2 pixel.
-//            Each pixel has a color represented by an int
-//
-//            the array representation of that image would be : {top left pixel, topright pixel, bottom left pixel, bottomright pixel}
-//
-//            basically, each line of pixel in an array of int, and you add each line one by one at the end of the array.
-//           */
-//        try {
-////            BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(stream.toByteArray(), 0, stream.size(), false);
-//
-//            int line = 0;
-//            int column = 0;
-//
-//            for (int y = 0; y < image.getHeight(); y += titleSize) {
-//                for (int x = 0; x < image.getWidth(); x += titleSize) {
-//                    if (x + titleSize < image.getWidth() && y + titleSize < image.getHeight()) {
-//
-//                        Bitmap tile = Bitmap.createBitmap(image, x, y, titleSize, titleSize); // This gives a tile of the original image
-//                        int colour = getAverageColor(tile);             // This gives you the average color
-////                        Log.i("anish", "colour = " + String.format("%06X", 0xFFFFFF & colour));   //This gives you the hex code
-//                        tile.recycle();                                             // Free memory
-//
-//                        int currentIndex = (line * width) + column;
-//                        if (currentIndex < width * height)
-//                            array[currentIndex] = colour;                            // Add color to current index in array
-//
-//                        column++;
-//                    }
-//                }
-//                line++;
-//                column = 0;
-//            }
-//            return generateBitmapFromArray(array, width, height);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return null;
-//    }
 
     public class DivideAsync extends AsyncTask<DivideParams, Void, ArrayList<String>> {
 
@@ -113,8 +63,8 @@ public class DivideTiles {
             imgwidth = img.getWidth();
             imgHeight = img.getHeight();
 
-            bmp = Bitmap.createBitmap(imgwidth, imgHeight, Bitmap.Config.ARGB_8888);
-            canvas = new Canvas(bmp);
+            bmp = Bitmap.createBitmap(imgwidth, imgHeight, Bitmap.Config.ARGB_8888);                //Setup new global bitmap
+            canvas = new Canvas(bmp);                                                               //Add Bitmap to canvas so it can modified when server returns a tile
             paint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -131,14 +81,15 @@ public class DivideTiles {
                     for (int x = 0; x < img.getWidth(); x += tileSize) {
                         if (x + tileSize <= img.getWidth() && y + tileSize <= img.getHeight()) {
 
-                            Bitmap tile = Bitmap.createBitmap(img, x, y, tileSize, tileSize); // This gives a tile of the original image
+                            Bitmap tile = Bitmap.createBitmap(img, x, y, tileSize, tileSize);       // This gives a tile of the original image
                             Bitmap newBitmap = Bitmap.createScaledBitmap(tile, 1, 1, true);
-                            tile.recycle();
+
+                            tile.recycle();                                                         //Free memory
 
                             String color = String.format("%06X", 0xFFFFFF & newBitmap.getPixel(0, 0));// This gives you the average color and converts to HEX
                             array.add(color);
-                            // Free memory
-                            newBitmap.recycle();
+
+                            newBitmap.recycle();                                                    // Free memory
 
                         }
                     }
@@ -162,10 +113,10 @@ public class DivideTiles {
 
             for (String urlInis : ints) {
                 if (urlInis != null) {
-                    LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
-                    ConstructParams test = new ConstructParams((url + urlInis), i);
+                    ConstructParams constructParams = new ConstructParams((url + urlInis), i);      //Create params for pulling from the server and reconstructing the bitmap
 
-                    getTileFromServer.execute(test);
+                    LoadImageTileFromServer getTileFromServer = new LoadImageTileFromServer();
+                    getTileFromServer.execute(constructParams);
                     i++;
                 }
 
@@ -173,8 +124,8 @@ public class DivideTiles {
         }
     }
 
-    public interface ConstructBitmapListener {
-        void constructBitmapListener(Bitmap img);
+    public interface ConstructBitmapListener {                                                      //Listner that is setup in MainActivity. When the Bitmap is finished it will
+        void constructBitmapListener(Bitmap img);                                                   //pass it to the activity ready to be rendered on screen.
     }
 
     public void ConstructBitmapListener(ConstructBitmapListener listener) {
@@ -196,8 +147,7 @@ public class DivideTiles {
 
                 int y = pos / width;
                 int x = pos - (y * width);
-
-                canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);
+                canvas.drawBitmap(downloadBitmap(params[0].url), x * tileSize, y * tileSize, paint);//Draw each tile to the global canvas with correct X & Y pos
                 return pos;
             } catch (Exception e) {
                 // log error
@@ -213,6 +163,7 @@ public class DivideTiles {
             }
         }
 
+        //Get the PNG from the Node server Using HttpURLConnection
         private Bitmap downloadBitmap(String myUrl) {
             HttpURLConnection conn = null;
             InputStream is = null;

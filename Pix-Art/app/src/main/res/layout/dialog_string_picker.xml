@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/textColor"
+    android:orientation="vertical"
+    android:padding="@dimen/activity_horizontal_margin">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/pick_your_size"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"/>
+
+    <wiseowl.com.au.pix_art.CustomPicker
+        android:id="@+id/picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:divider="@color/colorPrimary"/>
+
+    <Button
+        android:id="@+id/pass_change_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="Confirm"
+        android:textColor="@color/textColor"/>
+
+</LinearLayout>

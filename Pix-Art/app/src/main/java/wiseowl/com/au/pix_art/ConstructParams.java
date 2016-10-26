@@ -9,7 +9,6 @@ public class ConstructParams {
     int pos;
 
     ConstructParams( String url, int pos) {
-
         this.url = url;
         this.pos = pos;
 

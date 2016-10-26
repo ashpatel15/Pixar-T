@@ -15,6 +15,9 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -38,28 +41,17 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
 
         Drawable myDrawable = ContextCompat.getDrawable(this, R.drawable.one);
         image = ((BitmapDrawable) myDrawable).getBitmap();
-//        updateProgress();
-
-//        DivideTiles divide = new DivideTiles(this, image, TILE_SIZE);
-//        divide.ConstructBitmapListener(this);
-
         iv.setImageBitmap(image);
-        iv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-
-            }
-        });
 
         btn = (Button) findViewById(R.id.btnRender);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startRain();
-
-                DivideTiles divide = new DivideTiles( image, TILE_SIZE);
+                DivideTiles divide = new DivideTiles(image, TILE_SIZE);
                 divide.ConstructBitmapListener(MainActivity.this);
+                startRain();
+                fadeOutAndHideImage(iv, true);
             }
         });
     }
@@ -69,11 +61,45 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
     public void constructBitmapListener(Bitmap bitmap) {
 
         iv.setImageBitmap(bitmap);
+        fadeOutAndHideImage(iv, false);
         stopProgress();
     }
 
+    private void fadeOutAndHideImage(final ImageView img, final boolean fadeout) {
+        Animation fade;
+        if (fadeout) {
+            fade = new AlphaAnimation(1, 0);
+        } else {
+            fade = new AlphaAnimation(0, 1);
+        }
+        fade.setInterpolator(new AccelerateInterpolator());
+        fade.setDuration(1000);
+
+        fade.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationEnd(Animation animation) {
+                if (fadeout) {
+                    img.setVisibility(View.GONE);
+                } else {
+                    img.setVisibility(View.VISIBLE);
+                }
+            }
+
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            public void onAnimationStart(Animation animation) {
+            }
+        });
+
+        img.startAnimation(fade);
+    }
+
+
     //Start partical
     public void startRain() {
+        if (particleSystem != null) {
+            particleSystem.cancel();                                                                //Clears particals left on screen
+        }
         particleSystem = new ParticleSystem(MainActivity.this, 80, R.drawable.drop, 10000);
         particleSystem.setSpeedByComponentsRange(0f, 0f, 0.05f, 0.1f);
         particleSystem.setAcceleration(0.00005f, 90);
@@ -83,7 +109,9 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
     //Finish partical
     public void stopProgress() {
         if (particleSystem != null) {
+            particleSystem.setAcceleration(0.005f, 90);
             particleSystem.stopEmitting();
+            particleSystem.setFadeOut(500);
         }
     }
 
@@ -97,13 +125,30 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.pickImage) {
-            Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(i, RESULT_LOAD_IMAGE);
-            return true;
+        switch (id) {
+            case R.id.pickImage:
+
+                Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, RESULT_LOAD_IMAGE);
+                break;
+            case R.id.settings:
+                //Inflate Picker Dialog to pick tile sieze
+                PickerDialog pickerDialog;
+
+                pickerDialog = PickerDialog.newInstance(getResources().getStringArray(R.array.tileSize), "Pick your tile size", new PickerDialog.DialogListItemPosListner() {
+                    @Override
+                    public void getItemPos(int pos) {
+                        TILE_SIZE = pos;    //Set tile size to global var
+                    }
+                });
+
+                //Show the Dialog
+                if (pickerDialog != null) {pickerDialog.show(getSupportFragmentManager(), "StringPickerDialog");}
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+
     }
 
     @Override
@@ -126,7 +171,5 @@ public class MainActivity extends AppCompatActivity implements DivideTiles.Const
             iv.setImageBitmap(image);
 
         }
-
-
     }
 }
